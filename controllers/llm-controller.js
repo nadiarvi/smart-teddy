@@ -46,3 +46,4 @@ const speakOutEmotion = ({ text }) => {
     // ... TODO: Implement the function
     return null;
 }
+

@@ -1,5 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const interactionController = require('../controllers/llm-controller');
+const dataController = require('../controllers/llm-controller');
+const { classify, sampleClassifier } = require('../controllers/data-controller');
 
-router.get()
+router.post('/classify', classify);
+
+router.post('/sample', sampleClassifier);
+
+module.exports = router;
