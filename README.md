@@ -14,8 +14,11 @@ npm run dev
 
 # Repository Structure
 Controllers: Handles the background logic for the actions
+
 Routes: Handles all endpoint routes that are available from the server
+
 Models: All edge-impulse model for state classification
+
 Firmware: Micropython codes for data collection
 
 # Interact with Bear!
