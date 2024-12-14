@@ -20,9 +20,13 @@ Firmware: Micropython codes for data collection
 
 # Interact with Bear!
 **IDLE**: The bear remains stationary, sitting upright without movement.
+
 **HANDSHAKING**: Hold the bear's left hand and shake it gently up and down.
+
 **CLAPPING**: Grab both of the bear's hands and softly clap them together in front.
+
 **SHAKING**: Gently shake the bear by moving it slightly, about 3 cm is enough for recognition (avoid shaking too hard).
+
 **PETTING**: Lightly tap (not stroking) repeatedly the sensor on the bear’s head with your hand.
 
 # Serial Connection with Bear~
