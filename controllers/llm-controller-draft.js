@@ -1,5 +1,7 @@
 // Importing required libraries
 const axios = require('axios');
+const fs = require('fs');
+const { exec } = require('child_process');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -57,6 +59,44 @@ function getPrompt(thread = []) {
 let interactionHistory = [];
 const prompt = getPrompt([]);
 
+// Function to convert text to speech using Google Cloud TTS
+async function textToSpeech(text, filename = 'teddy_response.mp3') {
+    try {
+        const url = 'https://texttospeech.googleapis.com/v1/text:synthesize';
+        const response = await axios.post(
+            url,
+            {
+                input: { text },
+                voice: {
+                    languageCode: 'en-US',
+                    name: 'en-US-Wavenet-D', // Adjust the voice as needed
+                    ssmlGender: 'NEUTRAL',
+                },
+                audioConfig: { audioEncoding: 'MP3' },
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${process.env.GOOGLE_CLOUD_API_KEY}`,
+                },
+            }
+        );
+
+        const audioContent = response.data.audioContent;
+        fs.writeFileSync(filename, audioContent, 'base64');
+        console.log(`Audio content written to file: ${filename}`);
+
+        // Play the audio automatically (works on Linux/Mac with `afplay`, use `play` for Linux)
+        exec(`afplay ${filename}`, (error) => {
+            if (error) {
+                console.error('Error playing the audio file:', error.message);
+            }
+        });
+    } catch (error) {
+        console.error('Error during text-to-speech conversion:', error.message);
+    }
+}
+
 // Function to process interaction data and generate response
 async function processInteraction(interactionData) {
     try {
@@ -67,6 +107,9 @@ async function processInteraction(interactionData) {
 
         // Simulate TTS output
         console.log(`Teddy says: ${teddyResponse.content}`);
+
+        // Convert the teddy's response into speech and play it
+        await textToSpeech(teddyResponse.content);
 
         return { interactionData, teddyResponse: teddyResponse.content };
     } catch (error) {
