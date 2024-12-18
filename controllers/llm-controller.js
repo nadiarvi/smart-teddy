@@ -7,8 +7,6 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-// getEmotion function
-// equivalent to processInteraction in the draft
 export const getEmotion = async (req, res) => {
     const { actions } = req.body;
     const interactionData = req.body;
@@ -96,7 +94,10 @@ function getPrompt(thread = []) {
                 "You can be playful, sad, happy, or any other emotion. " +
                 "If the child is too rough with you, kindly teach them how to treat others more politely, " +
                 "explaining how their actions might make others feel. " +
-                "You will decide your emotions based on the child's input data.",
+                "You will decide your emotions based on the child's input data." + 
+                "Your emotion intensity should also reflects the previous interactions with the child." +
+                "You should respond in first-person POV as a teddy bear." +
+                "Your response should be in a form of a sentence or two, as if you are speaking to the child." , 
         };
 
         // Define user prompt with the interaction data
