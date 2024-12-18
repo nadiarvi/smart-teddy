@@ -1,24 +1,32 @@
 # smart-teddy
 CS492 AI Prototyping
 
-# Running the Code
-Clone this repository and make sure you are in the `smart-teddy` repository.
+# Getting Started
+Clone this repository and install all dependencies.
+```
+git clone https://github.com/nadiarvi/smart-teddy.git
+npm i
+```
+
+Make sure you are in the `smart-teddy` repository.
 ```
 cd smart-teddy
 ```
 
-You can run the code using the command:
+Run the server using the command:
 ```
 npm run dev
 ```
 
+You're good to go! Run the interactions with bear using the command:
+```
+node classifier.js
+```
+
 # Repository Structure
-Controllers: Handles the background logic for the actions
-
-Routes: Handles all endpoint routes that are available from the server
-
-Models: All edge-impulse model for state classification
-
+- Controllers: Handles the background logic for the actions
+- Routes: Handles all endpoint routes that are available from the server
+- Models: All edge-impulse model for state classification
 Firmware: Micropython codes for data collection
 
 # Interact with Bear!
