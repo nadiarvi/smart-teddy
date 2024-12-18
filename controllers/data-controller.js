@@ -1,70 +1,40 @@
-const { lightClassifier } = require("../models/light/run-impulse");
+const { handClassify } = require("../models/bear_idle_handshake_clapping/run-impulse");
+const { shakeClassify } = require("../models/bear_idle_shaking/run-impulse");
+const { headClassify } = require("../models/bear_idle_petting/run-impulse");
 
-const handshake = (data) => {
-    return data && data.length ? 'Handshake successful' : '';
-}
 
-const headpat = (data) => {
-    return data && data.length ? 'Headpat successful' : '';
-}
+/* 
+    FORMAT INCOMING DATA:
+    { "features": 
+        {
+            "head"= [float],
+            "hand" = [float],
+            "body" = [float],
+        }
+    }
 
-const squeeze = (data) => {
-    return data && data.length ? 'Squeeze successful' : '';
-}
-
-const clap = (data) => {
-    return data && data.length ? 'Clap successful' : '';
-}
-
-const shake = (data) => {
-    return data && data.length ? 'Shake successful' : '';
-}
+*/
 
 const classify = (req, res) => {
-    // data format: dictionary, key: action, value: array of data sensor}
-    const { userInput } = req.body;
-    const actions = Object.keys(userInput);
-
-    let classification = {};
-
-    actions.forEach(action => {
-        data = userInput[action];
-        switch(action) {
-            case 'handshake':
-                classification[action] = handshake(data);
-                break;
-            case 'headpat':
-                classification[action] = headpat(data);
-                break;
-            case 'squeeze':
-                classification[action] = squeeze(data);
-                break;
-            case 'clap':
-                classification[action] = clap(data);
-                break;
-            case 'shake':
-                classification[action] = shake(data);
-                break;
-            default:
-                console.log('Invalid action');
-        }
-    })
-
-    res.status(200).send(classification);
-    // res.status(200).send(greet);
-}
-
-const sampleClassifier = (req, res) => {
     const { features } = req.body;
-    console.log('features', features);
+    console.log('sensorData', sensorData);
+    console.log("data received. starting classification....")
 
-    const result = lightClassifier(features);
+    // classify results: headpat, handshake, clap, shake
+    const head = headClassifier(features.head);
+    const hand = handClassifier(features.hand);
+    const body = bodyClassifier(features.body);
+
+    let result = {};
+    result.headpat = head.headpat;
+    result.handshake = hand.handshake;
+    result.clap = hand.clap;
+    result.shake = hand.shake;
+
     console.log('result', result);
-
     res.status(200).send(result);
 }
 
 module.exports = {
-    classify,
-    sampleClassifier
+    classify
 };

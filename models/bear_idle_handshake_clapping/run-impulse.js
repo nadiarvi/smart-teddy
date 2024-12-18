@@ -124,24 +124,18 @@ class EdgeImpulseClassifier {
     }
 }
 
-if (!process.argv[2]) {
-    return console.error('Requires one parameter (a comma-separated list of raw features, or a file pointing at raw features)');
+const classifier = new EdgeImpulseClassifier();
+function handClassify(features) {
+    return classifier
+        .init()
+        .then(async () => {
+            let json = classifier.classify(features);
+            json = json.results;
+
+            return json;
+        })
 }
 
-let features = process.argv[2];
-if (fs.existsSync(features)) {
-    features = fs.readFileSync(features, 'utf-8');
-}
-
-// Initialize the classifier, and invoke with the argument passed in
-let classifier = new EdgeImpulseClassifier();
-classifier.init().then(async () => {
-    let project = classifier.getProjectInfo();
-    console.log('Running inference for', project.owner + ' / ' + project.name + ' (version ' + project.deploy_version + ')');
-
-    let result = classifier.classify(features.trim().split(',').map(n => Number(n)));
-
-    console.log(result);
-}).catch(err => {
-    console.error('Failed to initialize classifier', err);
-});
+module.exports = {
+    handClassify
+};

@@ -3,6 +3,6 @@ const router = express.Router();
 const llmController = require('../controllers/llm-controller');
 const { getEmotion } = require('../controllers/llm-controller');
 
-router.get('/getEmotion', getEmotion);
+router.post('/getEmotion', getEmotion);
 
 module.exports = router;
