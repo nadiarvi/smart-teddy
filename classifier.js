@@ -23,9 +23,15 @@ const parser = port.pipe(new ReadlineParser());
 
 console.log("SerialPort connected");
 let i = 0;
+let processing = false;
 parser.on('data', async (data) =>  {
+    if (processing) {
+        return;
+    }
+    processing = true;
+
     try {
-        // console.log("getting data...");
+        console.log("getting data...");
         const sensorData = JSON.parse(data);
         const { hand, head, body } = sensorData;
 
@@ -35,6 +41,7 @@ parser.on('data', async (data) =>  {
 
         i = (i + 1) % (N);
         if (i !== 0) {
+            processing = false; // Reset flag and exit if not ready
             return;
         }
 
@@ -43,10 +50,23 @@ parser.on('data', async (data) =>  {
         const bodyPrediction = await bodyClassify(bodyFeatures);
 
         const result = {
-            hand: handPrediction,
-            head: headPrediction,
-            body: bodyPrediction
+            "clap": handPrediction.find(item => item.label === 'clapping').value,
+            "handshake": handPrediction.find(item => item.label === 'handshaking').value,
+            "headpat": headPrediction.find(item => item.label === 'petting').value,
+            "shake": bodyPrediction.find(item => item.label === 'shaking').value,
         };
+        
+        //hardcore to fix wrong classification result
+        if (result.clap != 0 && result.clap == result.handshake) {
+            result.clap = 0;
+            result.handshake = 0;
+        }
+
+        // const result = {
+        //     hand: handPrediction,
+        //     head: headPrediction,
+        //     body: bodyPrediction
+        // };
         console.log(result);
 
         try {
@@ -64,6 +84,8 @@ parser.on('data', async (data) =>  {
     } catch (error) {
         console.error(error);
     }
+
+    processing = false;
 });
 
 port.on('error', (err) => {

@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import axios from 'axios';
 import fs from 'fs';
 import path from "path";
-import { exec } from 'child_process';
+import chalk from 'chalk';
 import player from "play-sound";
 
 const audioPlayer = player();
@@ -26,7 +26,6 @@ export const getEmotion = async (req, res) => {
 
         // convert the teddy's response into speech and play it
         await textToSpeech(teddyResponse.content);
-        // await TTS_chatgpt();
 
         return res.status(200).json({
             actions,
@@ -96,12 +95,16 @@ async function textToSpeech(text, filename = "teddy_response.mp3") {
         console.log(`Audio content written to file: ${speechFile}`);
 
         // Step 3: Play the audio file
-        audioPlayer.play(speechFile, (error) => {
-            if (error) {
-                console.error("Error playing the audio file:", error.message);
-            } else {
-                console.log("Audio playback started successfully!");
-            }
+        return new Promise((resolve, reject) => {
+            audioPlayer.play(speechFile, (error) => {
+                if (error) {
+                    console.error("Error playing the audio file:", error.message);
+                    reject(error);  // Reject the promise if there's an error
+                } else {
+                    console.log("Audio playback started successfully!");
+                    resolve();  // Resolve the promise once audio finishes playing
+                }
+            });
         });
     } catch (error) {
         console.error("Error during text-to-speech conversion:", error.message);
@@ -124,15 +127,40 @@ function getPrompt(thread = []) {
             content:
                 "You are a teddy bear that can feel emotions based on your interaction with a child. " +
                 "You are emotionally aware and can interpret how the child's actions make you feel. " +
-                "You can be playful, sad, happy, or any other emotion. " +
+                "The interactions that the child can give to you is clap, handshake, headpat, and shake, or idle " +
+                "Here is the general rule for the emotions: clap -> positive, handshake -> positive, headpat -> positive, shake -> negative" +
+                "If the child keeps doing the same interaction, you will be annoyed and the annoyance will grow stronger if the child keeps doing the same interaction" +
+                "If you are in a bad mood, treat positive interactions as a way to ask for forgiveness" +
+                "On Idle, you should encourage the child to play in a different way with you." +
+                "According to the child's interaction sequence, you should respond with an appropriate emotion. " +
                 "If the child is too rough with you, kindly teach them how to treat others more politely, " +
                 "explaining how their actions might make others feel. " +
-                "You will decide your emotions based on the child's input data." + 
-                "Your emotion intensity should also reflects the previous interactions with the child." +
+                // "You will decide your emotions based on the child's input data." + 
+                // "Your emotion intensity should also reflects the previous interactions with the child." +
                 "You should respond in first-person POV as a teddy bear." +
                 "You should express your emotion naturally, without explicitly saying 'I fell....'" + 
-                "Your response should be in a form of a sentence or two, as if you are speaking to the child." , 
+                "Your response should be in a form of a sentence or two, as if you are speaking to the child." + 
+                "If there are two sensor have an equal value, treat those value as 0" + 
+                "If the value of sensor is below 0.3, treat the value as 0",
+
         };
+
+        if (thread.length === 0) {
+            thread.push(systemPrompt);
+        }
+
+        thread.forEach((msg) => {
+            if (msg.role === "system") {
+                console.log(chalk.bgBlue("system: "));
+                console.log(chalk.blue(msg.content));
+            } else if (msg.role === "user") {
+                console.log(chalk.bgGreen("user: "));
+                console.log(chalk.green(msg.content));
+            } else {
+                console.log(chalk.bgYellow("teddy: "));
+                console.log(chalk.yellow(msg.content));
+            }
+        })
 
         // Define user prompt with the interaction data
         const userPrompt = {
@@ -152,12 +180,11 @@ function getPrompt(thread = []) {
                 max_tokens: 150,
                 temperature: 0.7,
                 ...options,
-                messages: [...thread, systemPrompt, userPrompt],
+                messages: [...thread, userPrompt],
             },
         }).then((res) => {
             const choice = res.data.choices[0];
             if (choice.finish_reason === 'stop') {
-                thread.push(systemPrompt);
                 thread.push(userPrompt);
                 thread.push(choice.message);
                 return choice.message;
