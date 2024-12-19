@@ -1,8 +1,11 @@
 import OpenAI from 'openai';
 import axios from 'axios';
 import fs from 'fs';
+import path from "path";
 import { exec } from 'child_process';
+import player from "play-sound";
 
+const audioPlayer = player();
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
@@ -23,6 +26,7 @@ export const getEmotion = async (req, res) => {
 
         // convert the teddy's response into speech and play it
         await textToSpeech(teddyResponse.content);
+        // await TTS_chatgpt();
 
         return res.status(200).json({
             actions,
@@ -37,7 +41,7 @@ export const getEmotion = async (req, res) => {
 };
 
 // TTS Function
-async function textToSpeech(text, filename = 'teddy_response.mp3') {
+async function _textToSpeech(text, filename = 'teddy_response.mp3') {
     try {
         const url = 'https://texttospeech.googleapis.com/v1/text:synthesize';
         const response = await axios.post(
@@ -63,10 +67,11 @@ async function textToSpeech(text, filename = 'teddy_response.mp3') {
         fs.writeFileSync(filename, audioContent, 'base64');
         console.log(`Audio content written to file: ${filename}`);
 
-        // Play the audio automatically (works on Linux/Mac with `afplay`, use `play` for Linux)
-        exec(`afplay ${filename}`, (error) => {
+        audioPlayer.play(speechFile, (error) => {
             if (error) {
-                console.error('Error playing the audio file:', error.message);
+                console.error("Error playing the audio file:", error.message);
+            } else {
+                console.log("Audio playback started successfully!");
             }
         });
     } catch (error) {
@@ -74,6 +79,34 @@ async function textToSpeech(text, filename = 'teddy_response.mp3') {
     }
 }
 
+async function textToSpeech(text, filename = "teddy_response.mp3") {
+    console.log("Generating audio....");
+    try {
+        // Step 1: Generate speech using OpenAI API
+        const mp3 = await openai.audio.speech.create({
+            model: "tts-1",
+            voice: "nova", // Adjust the voice as needed
+            input: text,
+        });
+
+        // Step 2: Save the generated audio to a file
+        const speechFile = path.resolve(`./audio/${filename}`);
+        const buffer = Buffer.from(await mp3.arrayBuffer());
+        await fs.promises.writeFile(speechFile, buffer);
+        console.log(`Audio content written to file: ${speechFile}`);
+
+        // Step 3: Play the audio file
+        audioPlayer.play(speechFile, (error) => {
+            if (error) {
+                console.error("Error playing the audio file:", error.message);
+            } else {
+                console.log("Audio playback started successfully!");
+            }
+        });
+    } catch (error) {
+        console.error("Error during text-to-speech conversion:", error.message);
+    }
+}
 // vocalize teddy bear
 const speakOutEmotion = async (emotion) => {
     console.log("Teddy says: ${emotion}");
@@ -97,6 +130,7 @@ function getPrompt(thread = []) {
                 "You will decide your emotions based on the child's input data." + 
                 "Your emotion intensity should also reflects the previous interactions with the child." +
                 "You should respond in first-person POV as a teddy bear." +
+                "You should express your emotion naturally, without explicitly saying 'I fell....'" + 
                 "Your response should be in a form of a sentence or two, as if you are speaking to the child." , 
         };
 

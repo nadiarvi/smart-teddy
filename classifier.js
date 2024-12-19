@@ -25,7 +25,7 @@ console.log("SerialPort connected");
 let i = 0;
 parser.on('data', async (data) =>  {
     try {
-        console.log("getting data...");
+        // console.log("getting data...");
         const sensorData = JSON.parse(data);
         const { hand, head, body } = sensorData;
 
