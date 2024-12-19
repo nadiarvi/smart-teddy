@@ -62,11 +62,13 @@ parser.on('data', async (data) =>  {
             result.handshake = 0;
         }
 
-        // const result = {
-        //     hand: handPrediction,
-        //     head: headPrediction,
-        //     body: bodyPrediction
-        // };
+        //set threshold to remove noise
+        for (const [key, value] of Object.entries(result)) {
+            if (value <= 0.3) {
+            result[key] = 0;
+            }
+        }
+
         console.log(result);
 
         try {
